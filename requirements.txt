@@ -1,0 +1,6 @@
+websockets>=10.0
+zeroconf>=0.38
+pytest>=7.0
+pytest-asyncio>=0.21
+# pyirsdk is Windows-only; install manually on a Windows host
+# pyirsdk>=1.0
