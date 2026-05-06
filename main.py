@@ -17,12 +17,12 @@ def main():
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Run with a mock iRacing backend (no real iRacing required)",
+        help="Run in test mode with a mock iRacing backend (no real iRacing required)",
     )
     parser.add_argument(
         "--rate",
         type=int,
-        default=30,
+        default=60,
         metavar="RATE",
         help="Telemetry update rate in updates per second (default: 60)",
     )

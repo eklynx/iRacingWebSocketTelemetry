@@ -3,7 +3,11 @@
     "allow": [
       "Bash(pip3 install *)",
       "Bash(python3 *)",
-      "Bash(pip3 show *)"
+      "Bash(pip3 show *)",
+      "Bash(dir \"C:\\\\Users\\\\eklyn\\\\Documents\\\\iRacingWebSocketTelemetry\" /b /a-d)",
+      "Bash(grep \"\\\\.py$\")",
+      "Bash(python -c \"import websockets; print\\(websockets.__version__\\)\")",
+      "Bash(.venv/Scripts/python -c \"import websockets; print\\(websockets.__version__\\)\")"
     ]
   }
 }
