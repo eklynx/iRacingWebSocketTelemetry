@@ -1,3 +1,5 @@
+import logging
+
 try:
     import irsdk as _irsdk_module
     _IRSDK_AVAILABLE = True
@@ -7,6 +9,8 @@ except ImportError:
 
 from telemetry_vars import TELEMETRY_VAR_NAMES  # noqa: E402
 from session_info_vars import SESSION_INFO_VAR_NAMES
+
+logger = logging.getLogger(__name__)
 
 
 class IRacingClient:
@@ -24,14 +28,15 @@ class IRacingClient:
         try:
             result = self._ir.startup()
             return bool(result)
-        except Exception:
+        except Exception as e:
+            logger.debug("startup() failed: %s", e)
             return False
 
     def shutdown(self) -> None:
         try:
             self._ir.shutdown()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("shutdown() failed: %s", e)
 
     @property
     def is_connected(self) -> bool:
@@ -44,8 +49,8 @@ class IRacingClient:
                 val = self._ir[var]
                 if val is not None:
                     data[var] = val
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("get_session_info() failed reading '%s': %s", var, e)
         return data
 
     def get_telemetry(self, var_names: frozenset[str] | None = None) -> dict:
@@ -53,17 +58,23 @@ class IRacingClient:
         data = {}
         has_freeze = hasattr(self._ir, "freeze_var_buffer_latest")
         if has_freeze:
-            self._ir.freeze_var_buffer_latest()
+            try:
+                self._ir.freeze_var_buffer_latest()
+            except Exception as e:
+                logger.debug("freeze_var_buffer_latest() failed: %s", e)
         try:
             for var in target:
                 try:
                     val = self._ir[var]
                     data[var] = _serialize(val)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("get_telemetry() failed reading '%s': %s", var, e)
         finally:
             if has_freeze:
-                self._ir.unfreeze_var_buffer_latest()
+                try:
+                    self._ir.unfreeze_var_buffer_latest()
+                except Exception as e:
+                    logger.debug("unfreeze_var_buffer_latest() failed: %s", e)
         return data
 
 

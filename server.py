@@ -62,6 +62,8 @@ class TelemetryServer:
                 await self._handle_session_info(websocket, client)
             elif command == "ping":
                 await websocket.send(json.dumps({"type": "pong"}))
+            elif command == "status":
+                await websocket.send(json.dumps({"type": "status", "connected": client.is_connected}))
 
     async def _telemetry_loop(self, websocket, client, subscriptions: set[str]) -> None:
         was_connected = False
@@ -76,10 +78,13 @@ class TelemetryServer:
                     logger.info("iRacing disconnected")
                 else:
                     client.startup()  # silent reconnect attempt
-                await asyncio.sleep(self.update_interval)
+                await asyncio.sleep(0.5)
                 continue
 
-            was_connected = True
+            if not was_connected:
+                was_connected = True
+                await websocket.send(json.dumps({"type": "status", "connected": True}))
+                logger.info("iRacing connected")
 
             if not subscriptions:
                 await asyncio.sleep(self.update_interval)
