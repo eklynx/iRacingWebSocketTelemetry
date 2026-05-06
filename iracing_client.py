@@ -56,25 +56,12 @@ class IRacingClient:
     def get_telemetry(self, var_names: frozenset[str] | None = None) -> dict:
         target = var_names if var_names is not None else frozenset(TELEMETRY_VAR_NAMES)
         data = {}
-        has_freeze = hasattr(self._ir, "freeze_var_buffer_latest")
-        if has_freeze:
+        for var in target:
             try:
-                self._ir.freeze_var_buffer_latest()
+                val = self._ir[var]
+                data[var] = _serialize(val)
             except Exception as e:
-                logger.debug("freeze_var_buffer_latest() failed: %s", e)
-        try:
-            for var in target:
-                try:
-                    val = self._ir[var]
-                    data[var] = _serialize(val)
-                except Exception as e:
-                    logger.debug("get_telemetry() failed reading '%s': %s", var, e)
-        finally:
-            if has_freeze:
-                try:
-                    self._ir.unfreeze_var_buffer_latest()
-                except Exception as e:
-                    logger.debug("unfreeze_var_buffer_latest() failed: %s", e)
+                logger.debug("get_telemetry() failed reading '%s': %s", var, e)
         return data
 
 

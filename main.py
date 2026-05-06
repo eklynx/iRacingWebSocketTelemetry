@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 import logging
 import platform
 import sys
@@ -20,6 +19,13 @@ def main():
         action="store_true",
         help="Run with a mock iRacing backend (no real iRacing required)",
     )
+    parser.add_argument(
+        "--rate",
+        type=int,
+        default=30,
+        metavar="RATE",
+        help="Telemetry update rate in updates per second (default: 60)",
+    )
     args = parser.parse_args()
 
     if not args.test and platform.system() != "Windows":
@@ -32,9 +38,9 @@ def main():
     else:
         ir_client_factory = None
 
-    server = TelemetryServer(host="0.0.0.0", port=8765, ir_client_factory=ir_client_factory)
+    server = TelemetryServer(host="0.0.0.0", port=8765, ir_client_factory=ir_client_factory, update_interval=1 / args.rate)
     try:
-        asyncio.run(server.start())
+        server.start()
     except KeyboardInterrupt:
         logging.getLogger(__name__).info("Shutting down.")
 
