@@ -1,11 +1,18 @@
+import math
+
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
 class TelemetryVar:
     name: str
-    type: str         # "float" | "double" | "int" | "bool" | "bitfield"
+    type: str         # "float" | "double" | "int" | "bool" | "bitfield" | "int[]" | "float[]" | bool[]
     description: str
+
+    # Min and Max values are just for mocking purposes; the real iracing data might not be in the specified range.
+    min: Any = None
+    max: Any = None
 
 
 # ---------------------------------------------------------------------------
@@ -15,65 +22,70 @@ TELEMETRY_VARS: list[TelemetryVar] = [
     # Environment
     TelemetryVar("AirDensity",                       "float",    "Density of air at start/finish line (kg/m^3)"),
     TelemetryVar("AirPressure",                      "float",    "Pressure of air at start/finish line (Hg)"),
-    TelemetryVar("AirTemp",                          "float",    "Temperature of air at start/finish line (C)"),
+    TelemetryVar("AirTemp",                          "float",    "Temperature of air at start/finish line (C)", min=-40.0, max=50.0),
     TelemetryVar("Alt",                              "float",    "Altitude in meters (m)"),
-    TelemetryVar("FogLevel",                         "float",    "Fog level (%)"),
-    TelemetryVar("RelativeHumidity",                 "float",    "Relative humidity (%)"),
-    TelemetryVar("Skies",                            "int",      "Skies (0=clear 1=partly cloudy 2=mostly cloudy 3=overcast)"),
-    TelemetryVar("TrackTemp",                        "float",    "Temperature of track at start/finish line (C)"),
-    TelemetryVar("TrackTempCrew",                    "float",    "Temperature of track measured by crew around track (C)"),
-    TelemetryVar("WeatherType",                      "int",      "Weather type (0=constant 1=dynamic)"),
-    TelemetryVar("WindDir",                          "float",    "Wind direction at start/finish line (rad)"),
+    TelemetryVar("FogLevel",                         "float",    "Fog level (%)", min=0.0, max=100.0),
+    TelemetryVar("RelativeHumidity",                 "float",    "Relative humidity (%)", min=0.0, max=100.0),
+    TelemetryVar("Skies",                            "int",      "Skies (0=clear 1=partly cloudy 2=mostly cloudy 3=overcast)", min=0, max=4),
+    TelemetryVar("TrackTemp",                        "float",    "Temperature of track at start/finish line (C)", min=-40.0, max=50.0),
+    TelemetryVar("TrackTempCrew",                    "float",    "Temperature of track measured by crew around track (C)", min=-40.0, max=50.0),
+    TelemetryVar("WeatherType",                      "int",      "Weather type (0=constant 1=dynamic)", min=0, max=1),
+    TelemetryVar("WindDir",                          "float",    "Wind direction at start/finish line (rad)", min=0.0, max=2 * math.pi),
     TelemetryVar("WindVel",                          "float",    "Wind velocity at start/finish line (m/s)"),
 
     # Driver inputs
-    TelemetryVar("Brake",                            "float",    "Brake pedal position (0=released 1=max pedal force)"),
-    TelemetryVar("BrakeRaw",                         "float",    "Raw brake input (0=released 1=max pedal force)"),
-    TelemetryVar("Clutch",                           "float",    "Clutch pedal position (0=disengaged 1=fully engaged)"),
-    TelemetryVar("Throttle",                         "float",    "Throttle pedal position (0=off throttle 1=full throttle)"),
-    TelemetryVar("ThrottleRaw",                      "float",    "Raw throttle input (0=off throttle 1=full throttle)"),
-    TelemetryVar("SteeringWheelAngle",               "float",    "Steering wheel angle (rad)"),
-    TelemetryVar("SteeringWheelAngleMax",            "float",    "Steering wheel maximum angle (rad)"),
-    TelemetryVar("SteeringWheelPctDamper",           "float",    "Force feedback percent max damping (%)"),
-    TelemetryVar("SteeringWheelPctTorque",           "float",    "Force feedback percent max torque on steering shaft unsigned (%)"),
-    TelemetryVar("SteeringWheelPctTorqueSign",       "float",    "Force feedback percent max torque on steering shaft signed (%)"),
-    TelemetryVar("SteeringWheelPctTorqueSignStops",  "float",    "Force feedback percent max torque on steering shaft signed stops (%)"),
+    TelemetryVar("Brake",                            "float",    "Brake pedal position (0=released 1=max pedal force)", min = 0.0, max=1.0),
+    TelemetryVar("BrakeRaw",                         "float",    "Raw brake input (0=released 1=max pedal force)", min = 0.0, max=1.0),
+    TelemetryVar("Clutch",                           "float",    "Clutch pedal position (0=disengaged 1=fully engaged)", min = 0.0, max=1.0),
+    TelemetryVar("Throttle",                         "float",    "Throttle pedal position (0=off throttle 1=full throttle)", min = 0.0, max=1.0),
+    TelemetryVar("ThrottleRaw",                      "float",    "Raw throttle input (0=off throttle 1=full throttle)", min = 0.0, max=1.0),
+    TelemetryVar("SteeringWheelAngle",               "float",    "Steering wheel angle (rad)", min=0.0, max=2 * math.pi),
+    TelemetryVar("SteeringWheelAngleMax",            "float",    "Steering wheel maximum angle (rad)", min=0.0, max=2 * math.pi),
+    TelemetryVar("SteeringWheelPctDamper",           "float",    "Force feedback percent max damping (%)", min=0.0, max=100.0),
+    TelemetryVar("SteeringWheelPctTorque",           "float",    "Force feedback percent max torque on steering shaft unsigned (%)", min=0.0, max=100.0),
+    TelemetryVar("SteeringWheelPctTorqueSign",       "float",    "Force feedback percent max torque on steering shaft signed (%)", min=0.0, max=100.0),
+    TelemetryVar("SteeringWheelPctTorqueSignStops",  "float",    "Force feedback percent max torque on steering shaft signed stops (%)", min=0.0, max=100.0),
     TelemetryVar("SteeringWheelPeakForceNm",         "float",    "Peak torque mapping to direct input units for FFB (N*m)"),
     TelemetryVar("SteeringWheelTorque",              "float",    "Output torque on steering shaft (N*m)"),
 
     # Engine / powertrain
-    TelemetryVar("RPM",                              "float",    "Engine rpm (revs/min)"),
-    TelemetryVar("Gear",                             "int",      "Current gear (-1=reverse 0=neutral 1..n=forward)"),
-    TelemetryVar("FuelLevel",                        "float",    "Liters of fuel remaining (l)"),
-    TelemetryVar("FuelLevelPct",                     "float",    "Percent fuel remaining (%)"),
-    TelemetryVar("FuelPress",                        "float",    "Engine fuel pressure (bar)"),
-    TelemetryVar("FuelUsePerHour",                   "float",    "Engine fuel used instantaneous (kg/h)"),
-    TelemetryVar("ManifoldPress",                    "float",    "Engine manifold pressure (bar)"),
-    TelemetryVar("OilLevel",                         "float",    "Engine oil level (l)"),
-    TelemetryVar("OilPress",                         "float",    "Engine oil pressure (bar)"),
-    TelemetryVar("OilTemp",                          "float",    "Engine oil temperature (C)"),
-    TelemetryVar("ShiftGrindRPM",                    "float",    "RPM of shifter grinding noise (RPM)"),
-    TelemetryVar("ShiftIndicatorPct",                "float",    "DEPRECATED: use DriverCarSLBlinkRPM instead (%)"),
-    TelemetryVar("ShiftPowerPct",                    "float",    "Friction torque applied to gears when shifting or grinding (%)"),
-    TelemetryVar("Voltage",                          "float",    "Engine voltage (V)"),
-    TelemetryVar("WaterLevel",                       "float",    "Engine coolant level (l)"),
-    TelemetryVar("WaterTemp",                        "float",    "Engine coolant temperature (C)"),
+    TelemetryVar("RPM",                              "float",    "Engine rpm (revs/min)", min=0.0, max=15000.0),
+    TelemetryVar("Gear",                             "int",      "Current gear (-1=reverse 0=neutral 1..n=forward)", min=-1, max=9),
+    TelemetryVar("FuelLevel",                        "float",    "Liters of fuel remaining (l)", min=0.0, max=10.0),
+    TelemetryVar("FuelLevelPct",                     "float",    "Percent fuel remaining (%)", min=0.0, max=100.0),
+    TelemetryVar("FuelMixture",                      "float",    "Fuel mixture (0=gasoline 1=diesel 2=electric)", min=0, max=2),
+    TelemetryVar("FuelPressure",                     "float",    "Fuel pressure (bar)", min=0.0, max=300.0),
+    TelemetryVar("FuelUsePerHour",                   "float",    "Fuel used instantaneous (kg/h)", min=0.0, max=100.0),
+    TelemetryVar("ManifoldPressure",                 "float",    "Engine manifold pressure (bar)", min=0.0, max=10.0),
+    TelemetryVar("OilLevel",                         "float",    "Engine oil level (l)", min=0.0, max=30.0),
+    TelemetryVar("OilPress",                         "float",    "Engine oil pressure (bar)", min=0.0, max=100.0),
+    TelemetryVar("FuelPress",                        "float",    "Engine fuel pressure (bar)", min=0.0, max=300.0),
+    TelemetryVar("FuelUsePerHour",                   "float",    "Engine fuel used instantaneous (kg/h)", min=0.0, max=100.0),
+    TelemetryVar("ManifoldPress",                    "float",    "Engine manifold pressure (bar)", min=0.0, max=10.0),
+    TelemetryVar("OilLevel",                         "float",    "Engine oil level (l)", min=0.0, max=9.0),
+    TelemetryVar("OilPress",                         "float",    "Engine oil pressure (bar)", min=0.0, max=100.0),
+    TelemetryVar("OilTemp",                          "float",    "Engine oil temperature (C)", min=-40.0, max=450.0),
+    TelemetryVar("ShiftGrindRPM",                    "float",    "RPM of shifter grinding noise (RPM)", min=5000.0, max=9000.0 ),
+    TelemetryVar("ShiftPowerPct",                    "float",    "Friction torque applied to gears when shifting or grinding (%)", min=0.0, max=100.0),
+    TelemetryVar("Voltage",                          "float",    "Engine voltage (V)", min=11.5, max=13.5),
+    TelemetryVar("WaterLevel",                       "float",    "Engine coolant level (l)", min=0.0, max=10.0),
+    TelemetryVar("WaterTemp",                        "float",    "Engine coolant temperature (C)", min=-40.0, max=150.0),
     TelemetryVar("EngineWarnings",                   "bitfield", "Bitfield for warning lights (irsdk_EngineWarnings)"),
 
     # Vehicle dynamics
-    TelemetryVar("Speed",                            "float",    "GPS vehicle speed (m/s)"),
-    TelemetryVar("VelocityX",                        "float",    "X (lateral) velocity (m/s)"),
-    TelemetryVar("VelocityY",                        "float",    "Y (vertical) velocity (m/s)"),
-    TelemetryVar("VelocityZ",                        "float",    "Z (longitudinal) velocity (m/s)"),
-    TelemetryVar("LatAccel",                         "float",    "Lateral acceleration including gravity (m/s^2)"),
-    TelemetryVar("LongAccel",                        "float",    "Longitudinal acceleration including gravity (m/s^2)"),
-    TelemetryVar("VertAccel",                        "float",    "Vertical acceleration including gravity (m/s^2)"),
-    TelemetryVar("Pitch",                            "float",    "Pitch orientation (rad)"),
+    TelemetryVar("Speed",                            "float",    "GPS vehicle speed (m/s)", min=50.0, max=100.0),
+    TelemetryVar("VelocityX",                        "float",    "X (lateral) velocity (m/s)", min=50.0, max=100.0),
+    TelemetryVar("VelocityY",                        "float",    "Y (vertical) velocity (m/s)", min=50.0, max=100.0),
+    TelemetryVar("VelocityZ",                        "float",    "Z (longitudinal) velocity (m/s)", min=50.0, max=100.0),
+    TelemetryVar("LatAccel",                         "float",    "Lateral acceleration including gravity (m/s^2)", min=-10.0, max=10.0),
+    TelemetryVar("LongAccel",                        "float",    "Longitudinal acceleration including gravity (m/s^2)", min=-10.0, max=10.0),
+    TelemetryVar("VertAccel",                        "float",    "Vertical acceleration including gravity (m/s^2)", min=-10.0, max=10.0),
+    TelemetryVar("Pitch",                            "float",    "Pitch orientation (rad)", min=0.0, max=2*math.pi),
     TelemetryVar("PitchRate",                        "float",    "Pitch rate (rad/s)"),
-    TelemetryVar("Roll",                             "float",    "Roll orientation (rad)"),
+    TelemetryVar("Roll",                             "float",    "Roll orientation (rad)", min=0.0, max=2*math.pi),
     TelemetryVar("RollRate",                         "float",    "Roll rate (rad/s)"),
-    TelemetryVar("Yaw",                              "float",    "Yaw orientation (rad)"),
-    TelemetryVar("YawNorth",                         "float",    "Yaw orientation relative to north (rad)"),
+    TelemetryVar("Yaw",                              "float",    "Yaw orientation (rad)", min=0.0, max=2*math.pi),
+    TelemetryVar("YawNorth",                         "float",    "Yaw orientation relative to north (rad)", min=0.0, max=2*math.pi),
     TelemetryVar("YawRate",                          "float",    "Yaw rate (rad/s)"),
     TelemetryVar("Lat",                              "double",   "Latitude in decimal degrees"),
     TelemetryVar("Lon",                              "double",   "Longitude in decimal degrees"),
@@ -294,19 +306,20 @@ TELEMETRY_VARS: list[TelemetryVar] = [
     # ---------------------------------------------------------------------------
     # Per-car array vars — indexed by car index (up to 64 entries)
     # ---------------------------------------------------------------------------
-    TelemetryVar("CarIdxClassPosition",              "int",      "Cars class position in race by car index"),
-    TelemetryVar("CarIdxEstTime",                    "float",    "Estimated time to reach current location on track by car index (s)"),
-    TelemetryVar("CarIdxF2Time",                     "float",    "Race time behind leader or fastest lap time otherwise by car index (s)"),
-    TelemetryVar("CarIdxGear",                       "int",      "Current gear by car index (-1=reverse 0=neutral 1..n=forward)"),
-    TelemetryVar("CarIdxLap",                        "int",      "Lap count by car index"),
-    TelemetryVar("CarIdxLapDistPct",                 "float",    "Percentage distance around lap by car index (%)"),
-    TelemetryVar("CarIdxOnPitRoad",                  "bool",     "On pit road between the cones by car index"),
-    TelemetryVar("CarIdxPosition",                   "int",      "Cars position in race by car index"),
-    TelemetryVar("CarIdxRPM",                        "float",    "Engine rpm by car index (revs/min)"),
-    TelemetryVar("CarIdxSteer",                      "float",    "Steering wheel angle by car index (rad)"),
-    TelemetryVar("CarIdxTrackSurface",               "int",      "Track surface type by car index (irsdk_TrkLoc)"),
+    TelemetryVar("CarIdxClassPosition",              "int[64]",      "Cars class position in race by car index"),
+    TelemetryVar("CarIdxEstTime",                    "float[64]",    "Estimated time to reach current location on track by car index (s)"),
+    TelemetryVar("CarIdxF2Time",                     "float[64]",    "Race time behind leader or fastest lap time otherwise by car index (s)"),
+    TelemetryVar("CarIdxGear",                       "int[64]",      "Current gear by car index (-1=reverse 0=neutral 1..n=forward)"),
+    TelemetryVar("CarIdxLap",                        "int[64]",      "Lap count by car index"),
+    TelemetryVar("CarIdxLapDistPct",                 "float[64]",    "Percentage distance around lap by car index (%)"),
+    TelemetryVar("CarIdxOnPitRoad",                  "bool[64]",     "On pit road between the cones by car index"),
+    TelemetryVar("CarIdxPosition",                   "int[64]",      "Cars position in race by car index"),
+    TelemetryVar("CarIdxRPM",                        "float[64]",    "Engine rpm by car index (revs/min)"),
+    TelemetryVar("CarIdxSteer",                      "float[64]",    "Steering wheel angle by car index (rad)"),
+    TelemetryVar("CarIdxTrackSurface",               "int[64]",      "Track surface type by car index (irsdk_TrkLoc)"),
 ]
 
 # Derived conveniences used throughout the codebase.
 TELEMETRY_VAR_NAMES: tuple[str, ...] = tuple(v.name for v in TELEMETRY_VARS)
 TELEMETRY_VAR_SET: frozenset[str] = frozenset(TELEMETRY_VAR_NAMES)
+TELEMETRY_VAR_MAP: dict[str, TelemetryVar] = {v.name: v for v in TELEMETRY_VARS}

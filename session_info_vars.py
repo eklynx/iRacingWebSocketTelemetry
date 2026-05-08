@@ -19,3 +19,4 @@ SESSION_INFO_VARS: list[SessionInfoVar] = [
 
 SESSION_INFO_VAR_NAMES: tuple[str, ...] = tuple(v.name for v in SESSION_INFO_VARS)
 SESSION_INFO_VAR_SET: frozenset[str] = frozenset(SESSION_INFO_VAR_NAMES)
+SESSION_INFO_VAR_MAP: dict[str, SessionInfoVar] = {v.name: v for v in SESSION_INFO_VARS}
