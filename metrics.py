@@ -1,12 +1,35 @@
 from collections import deque
 
 
+class SessionMetrics:
+    def __init__(self):
+        self._current_get_streak: int = 0
+
+    def record_get(self) -> int:
+        self._current_get_streak += 1
+        return self._current_get_streak
+
+    def record_skip(self) -> None:
+        self._current_get_streak = 0
+
+
 class LoopMetrics:
     def __init__(self, window: int = 300):
         self._samples: deque[float] = deque(maxlen=window)
+        self._get_count: int = 0
+        self._skip_count: int = 0
+        self._max_get_streak: int = 0
 
     def record(self, duration_ms: float) -> None:
         self._samples.append(duration_ms)
+
+    def record_get(self, streak: int) -> None:
+        self._get_count += 1
+        if streak > self._max_get_streak:
+            self._max_get_streak = streak
+
+    def record_skip(self) -> None:
+        self._skip_count += 1
 
     def report(self) -> dict:
         if not self._samples:
@@ -20,6 +43,8 @@ class LoopMetrics:
             hi = min(lo + 1, n - 1)
             return samples[lo] + (idx - lo) * (samples[hi] - samples[lo])
 
+        total = self._get_count + self._skip_count
+        ratio = self._get_count / total if total > 0 else 0.0
         return {
             "min_ms": samples[0],
             "max_ms": samples[-1],
@@ -28,4 +53,8 @@ class LoopMetrics:
             "p90_ms": pct(90),
             "p95_ms": pct(95),
             "samples": n,
+            "get_count": self._get_count,
+            "skip_count": self._skip_count,
+            "get_vs_skip": ratio,
+            "max_get_streak": self._max_get_streak,
         }
