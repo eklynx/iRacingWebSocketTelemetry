@@ -7,7 +7,7 @@ import websockets.exceptions
 from websockets.asyncio.server import serve as ws_serve
 
 from iracing_client import IRacingClient
-from metrics import LoopMetrics
+from metrics import LoopMetrics, SampleMetrics, SessionMetrics
 from telemetry_vars import TELEMETRY_VAR_NAMES, TELEMETRY_VAR_SET
 from mdns import MDNSAdvertiser
 
@@ -33,6 +33,7 @@ class TelemetryServer:
         self._client: IRacingClient | None = None
         self._connection_count = 0
         self._loop_metrics = LoopMetrics()
+        self._var_get_metrics = SampleMetrics()
 
     # -------------------------------------------------------------------------
     # Client handler — called for each new WebSocket connection
@@ -47,9 +48,10 @@ class TelemetryServer:
         logger.info("WebSocket client connected")
 
         subscriptions: set[str] = set()
-        read_task = asyncio.create_task(self._read_commands(websocket, client, subscriptions, self._loop_metrics))
+        session_metrics = SessionMetrics()
+        read_task = asyncio.create_task(self._read_commands(websocket, client, subscriptions, self._loop_metrics, session_metrics))
         try:
-            await self._telemetry_loop(websocket, client, subscriptions, self._loop_metrics)
+            await self._telemetry_loop(websocket, client, subscriptions, self._loop_metrics, session_metrics)
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
@@ -68,7 +70,7 @@ class TelemetryServer:
     # Command reader — runs concurrently with _telemetry_loop
     # -------------------------------------------------------------------------
 
-    async def _read_commands(self, websocket, client: IRacingClient, subscriptions: set[str], loop_metrics: LoopMetrics) -> None:
+    async def _read_commands(self, websocket, client: IRacingClient, subscriptions: set[str], loop_metrics: LoopMetrics, session_metrics: SessionMetrics) -> None:
         try:
             async for raw in websocket:
                 parts = str(raw).strip().split(maxsplit=1)
@@ -98,7 +100,7 @@ class TelemetryServer:
     # Telemetry loop — polls iRacing and pushes to client; survives reconnects
     # -------------------------------------------------------------------------
 
-    async def _telemetry_loop(self, websocket, client: IRacingClient, subscriptions: set[str], loop_metrics: LoopMetrics) -> None:
+    async def _telemetry_loop(self, websocket, client: IRacingClient, subscriptions: set[str], loop_metrics: LoopMetrics, session_metrics: SessionMetrics) -> None:
         was_connected = False
         nextUpdateTime = 0.0
         while True:
@@ -116,14 +118,17 @@ class TelemetryServer:
                 await websocket.send(json.dumps({"type": "status", "connected": True}))
 
             if nextUpdateTime <= time.monotonic():
+                loop_metrics.record_get(session_metrics.record_get())
                 nextUpdateTime = time.monotonic() + self.update_interval
                 if subscriptions:
                     t0 = time.monotonic()
-                    snapshot = client.get_telemetry(frozenset(subscriptions))
+                    snapshot = client.get_telemetry(frozenset(subscriptions), self._var_get_metrics)
                     data = {k: v for k, v in snapshot.items() if k in subscriptions}
                     await websocket.send(json.dumps({"type": "telemetry", "data": data}))
                     loop_metrics.record((time.monotonic() - t0) * 1000)
-
+            else:
+                loop_metrics.record_skip()
+                session_metrics.record_skip()
             await asyncio.sleep(0.001)
 
     # -------------------------------------------------------------------------
@@ -131,7 +136,13 @@ class TelemetryServer:
     # -------------------------------------------------------------------------
 
     async def _handle_metrics(self, websocket, loop_metrics: LoopMetrics) -> None:
-        await websocket.send(json.dumps({"type": "metrics", "data": loop_metrics.report()}))
+        await websocket.send(json.dumps({
+            "type": "metrics",
+            "data": {
+                "loop": loop_metrics.report(),
+                "var_get": self._var_get_metrics.report(),
+            },
+        }))
 
     async def _handle_session_info(self, websocket, client: IRacingClient) -> None:
         data = client.get_session_info()
@@ -146,7 +157,7 @@ class TelemetryServer:
             var_names = frozenset(v.strip() for v in var_str.split(",") if v.strip())
         if not var_names:
             return
-        data = client.get_telemetry(var_names)
+        data = client.get_telemetry(var_names, self._var_get_metrics)
         await websocket.send(json.dumps({"type": "read", "data": data}))
 
     def _handle_subscribe(self, var_str: str, subscriptions: set[str]) -> None:

@@ -1,4 +1,5 @@
 import logging
+import time
 
 try:
     import irsdk as _irsdk_module
@@ -53,15 +54,20 @@ class IRacingClient:
                 logger.debug("get_session_info() failed reading '%s': %s", var, e)
         return data
 
-    def get_telemetry(self, var_names: frozenset[str] | None = None) -> dict:
+    def get_telemetry(self, var_names: frozenset[str] | None = None, var_metrics=None) -> dict:
         target = var_names if var_names is not None else frozenset(TELEMETRY_VAR_NAMES)
         data = {}
+        self._ir.freeze_var_buffer_latest()
         for var in target:
             try:
+                t0 = time.monotonic()
                 val = self._ir[var]
+                if var_metrics is not None:
+                    var_metrics.record((time.monotonic() - t0) * 1000)
                 data[var] = _serialize(val)
             except Exception as e:
                 logger.debug("get_telemetry() failed reading '%s': %s", var, e)
+        self._ir.unfreeze_var_buffer_latest()
         return data
 
 
