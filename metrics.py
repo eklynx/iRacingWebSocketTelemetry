@@ -43,6 +43,18 @@ class SampleMetrics:
         }
 
 
+class SessionMetrics:
+    def __init__(self):
+        self._current_get_streak: int = 0
+
+    def record_get(self) -> int:
+        self._current_get_streak += 1
+        return self._current_get_streak
+
+    def record_skip(self) -> None:
+        self._current_get_streak = 0
+
+
 class LoopMetrics:
     def __init__(self, window: int = 5000):
         self._samples: deque[float] = deque(maxlen=window)
