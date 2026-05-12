@@ -24,7 +24,7 @@ def _local_ip() -> str:
 class MDNSAdvertiser:
     """Registers and withdraws a Bonjour/mDNS service entry for the telemetry server."""
 
-    def __init__(self, port: int, instance_name: str = socket.gethostname()):
+    def __init__(self, port: int, instance_name: str = socket.gethostname().split(".")[0]):
         self.port = port
         self.instance_name = instance_name
         self._zc: AsyncZeroconf | None = None
