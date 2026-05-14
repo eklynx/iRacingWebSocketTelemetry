@@ -32,19 +32,20 @@ class TelemetryServer:
         self.advertise_mdns = advertise_mdns
         self._client: IRacingClient | None = None
         self._connection_count = 0
+        self._total_connections = 0
         self._loop_metrics = LoopMetrics()
         self._var_get_metrics = SampleMetrics()
+        self._shutdown_requested = False
 
     # -------------------------------------------------------------------------
     # Client handler — called for each new WebSocket connection
     # -------------------------------------------------------------------------
 
     async def handle_client(self, websocket) -> None:
-        if self._connection_count == 0:
-            self._client = self._ir_client_factory()
-            self._client.startup()
         self._connection_count += 1
-        client = self._client
+        self._total_connections += 1
+        client = self._ir_client_factory()
+        client.startup()
         logger.info("WebSocket client connected")
 
         subscriptions: set[str] = set()
@@ -60,10 +61,8 @@ class TelemetryServer:
                 await read_task
             except (asyncio.CancelledError, Exception):
                 pass
+            client.shutdown()
             self._connection_count -= 1
-            if self._connection_count == 0:
-                client.shutdown()
-                self._client = None
             logger.info("WebSocket client disconnected")
 
     # -------------------------------------------------------------------------
@@ -103,7 +102,7 @@ class TelemetryServer:
     async def _telemetry_loop(self, websocket, client: IRacingClient, subscriptions: set[str], loop_metrics: LoopMetrics, session_metrics: SessionMetrics) -> None:
         was_connected = False
         nextUpdateTime = 0.0
-        while True:
+        while not self._shutdown_requested:
             connected = client.is_connected
             if not connected:
                 if was_connected:
@@ -139,6 +138,10 @@ class TelemetryServer:
         await websocket.send(json.dumps({
             "type": "metrics",
             "data": {
+                "connections": {
+                    "current": self._connection_count,
+                    "total": self._total_connections,
+                },
                 "telemetry_loop": loop_metrics.report(),
                 "var_get": self._var_get_metrics.report(),
             },

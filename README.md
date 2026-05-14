@@ -140,7 +140,11 @@ All server messages are JSON objects with a `type` field.
 {
   "type": "metrics",
   "data": {
-    "loop": {
+    "connections": {
+      "current": 1,
+      "total": 3
+    },
+    "telemetry_loop": {
       "time": { "min_ms": 0.1, "max_ms": 3.2, "mean_ms": 0.4, "p50_ms": 0.3, "p90_ms": 0.8, "p95_ms": 0.9, "samples": 3600 },
       "get_count": 3600,
       "skip_count": 0,
@@ -181,6 +185,12 @@ See [`telemetry_vars.py`](telemetry_vars.py) for the full list with types and de
 When the server starts it registers a mDNS service of type `_iracingws._tcp.local.` using the machine's hostname as the instance name. Clients on the same LAN can discover the server without knowing its IP address.
 
 ## Metrics
+### `connections`
+| Metric name | Scope  | Description                                           |
+|-------------|--------|-------------------------------------------------------|
+| `current`   | Server | Number of WebSocket clients currently connected       |
+| `total`     | Server | Total WebSocket connections accepted since server start |
+
 ### `telemetry_loop`
 | Metric name      | Scope   | Description                                                                                                                                                            |
 |------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
