@@ -13,6 +13,12 @@ class MockIRSDK:
     def shutdown(self):
         pass
 
+    def freeze_var_buffer_latest(self):
+        pass
+
+    def unfreeze_var_buffer_latest(self):
+        pass
+
     @property
     def is_connected(self) -> bool:
         return True

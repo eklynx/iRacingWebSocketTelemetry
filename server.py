@@ -108,7 +108,7 @@ class TelemetryServer:
             if not connected:
                 if was_connected:
                     was_connected = False
-                    await websocket.send(json.dumps({"type": "disconnected"}))
+                    await websocket.send(json.dumps({"type": "status", "connected": False}))
                 client.startup()
                 await asyncio.sleep(0.25)
                 continue
@@ -139,7 +139,7 @@ class TelemetryServer:
         await websocket.send(json.dumps({
             "type": "metrics",
             "data": {
-                "loop": loop_metrics.report(),
+                "telemetry_loop": loop_metrics.report(),
                 "var_get": self._var_get_metrics.report(),
             },
         }))

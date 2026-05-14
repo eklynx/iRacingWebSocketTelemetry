@@ -26,6 +26,13 @@ def main():
         metavar="RATE",
         help="Telemetry update rate in updates per second (default: 60)",
     )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        metavar="PORT",
+        help="WebSocket server port (default: 8765)",
+    )
     args = parser.parse_args()
 
     if not args.test and platform.system() != "Windows":
@@ -38,7 +45,7 @@ def main():
     else:
         ir_client_factory = None
 
-    server = TelemetryServer(host="0.0.0.0", port=8765, ir_client_factory=ir_client_factory, update_interval=1.0 / args.rate)
+    server = TelemetryServer(host="0.0.0.0", port=args.port, ir_client_factory=ir_client_factory, update_interval=1.0 / args.rate)
     try:
         server.start()
     except KeyboardInterrupt:
