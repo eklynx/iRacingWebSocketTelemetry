@@ -44,7 +44,10 @@ class TelemetryServer:
     async def handle_client(self, websocket) -> None:
         self._connection_count += 1
         self._total_connections += 1
-        client = self._ir_client_factory()
+        if self._client is None:
+            self._client = self._ir_client_factory()
+            self._client.startup()
+        client = self._client
         client.startup()
         logger.info("WebSocket client connected")
 
@@ -63,6 +66,8 @@ class TelemetryServer:
                 pass
             client.shutdown()
             self._connection_count -= 1
+            if self._connection_count == 0:
+                self._client = None
             logger.info("WebSocket client disconnected")
 
     # -------------------------------------------------------------------------

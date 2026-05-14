@@ -57,7 +57,7 @@ class IRacingClient:
     def get_telemetry(self, var_names: frozenset[str] | None = None, var_metrics=None) -> dict:
         target = var_names if var_names is not None else frozenset(TELEMETRY_VAR_NAMES)
         data = {}
-        self._ir.freeze_var_buffer_latest()
+        # self._ir.freeze_var_buffer_latest()
         for var in target:
             try:
                 t0 = time.monotonic()
@@ -67,7 +67,7 @@ class IRacingClient:
                 data[var] = _serialize(val)
             except Exception as e:
                 logger.debug("get_telemetry() failed reading '%s': %s", var, e)
-        self._ir.unfreeze_var_buffer_latest()
+        # self._ir.unfreeze_var_buffer_latest()
         return data
 
 
