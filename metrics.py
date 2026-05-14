@@ -22,7 +22,7 @@ class SampleMetrics:
 
     def report(self) -> dict:
         if not self._samples:
-            return {"samples": 0}
+            return {"time": {"samples": 0}}
         samples = sorted(self._samples)
         n = len(samples)
 
@@ -33,13 +33,15 @@ class SampleMetrics:
             return samples[lo] + (idx - lo) * (samples[hi] - samples[lo])
 
         return {
-            "min_ms": round(samples[0], 2),
-            "max_ms": round(samples[-1], 2),
-            "mean_ms": round(sum(samples) / n, 2),
-            "p50_ms": round(pct(50), 2),
-            "p90_ms": round(pct(90), 2),
-            "p95_ms": round(pct(95), 2),
-            "samples": n,
+            "time": {
+                "min_ms": round(samples[0], 2),
+                "max_ms": round(samples[-1], 2),
+                "mean_ms": round(sum(samples) / n, 2),
+                "p50_ms": round(pct(50), 2),
+                "p90_ms": round(pct(90), 2),
+                "p95_ms": round(pct(95), 2),
+                "samples": n,
+            },
         }
 
 
@@ -75,7 +77,7 @@ class LoopMetrics:
 
     def report(self) -> dict:
         if not self._samples:
-            return {"samples": 0}
+            return {"time": {"samples": 0}}
         samples = sorted(self._samples)
         n = len(samples)
 
@@ -88,13 +90,15 @@ class LoopMetrics:
         total = self._get_count + self._skip_count
         ratio = self._get_count / total if total > 0 else 0.0
         return {
-            "min_ms": round(samples[0], 2),
-            "max_ms": round(samples[-1], 2),
-            "mean_ms": round(sum(samples) / n, 2),
-            "p50_ms": round(pct(50), 2),
-            "p90_ms": round(pct(90), 2),
-            "p95_ms": round(pct(95), 2),
-            "samples": n,
+            "time": {
+                "min_ms": round(samples[0], 2),
+                "max_ms": round(samples[-1], 2),
+                "mean_ms": round(sum(samples) / n, 2),
+                "p50_ms": round(pct(50), 2),
+                "p90_ms": round(pct(90), 2),
+                "p95_ms": round(pct(95), 2),
+                "samples": n,
+            },
             "get_count": self._get_count,
             "skip_count": self._skip_count,
             "get_vs_skip": ratio,
